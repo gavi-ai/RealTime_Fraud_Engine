@@ -2,15 +2,16 @@ import streamlit as st
 import pandas as pd
 import time
 import redis
+import os
 
 st.set_page_config(page_title="Vault of Millions", layout='wide')
-st.title("👑 Gavi x Ishika Vault of Millions")
+st.title(" Vault of Millions")
 st.subheader("Live Real-Time Fraud Detection Radar 📡")
 st.markdown("Monitoring high-velocity Redis data streams in milliseconds.")
 
 @st.cache_resource
 def get_redis_connection():
-    return redis.Redis(host='localhost', port=6379, decode_responses=True)
+    return redis.Redis(host='redis', port=6379, decode_responses=True)
 
 r= get_redis_connection()
 placeholder = st.empty()

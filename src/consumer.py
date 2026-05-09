@@ -5,7 +5,7 @@ print("🛡️ [GAVI VAULT]: Initializing Real-Time Fraud Detection Sniper...")
 print("==================================================================")
 
 # Connect to Redis
-r = redis.Redis(os.getenv('REDIS_HOST', 'localhost'), port=6379, decode_responses=True)
+r = redis.Redis(host='redis', port=6379, decode_responses=True)
 
 # We are listening to the 'live_transactions' stream.
 # The '$' symbol is crucial: It tells Redis "Only give me NEW messages that come AFTER I start listening". 

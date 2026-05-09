@@ -29,3 +29,26 @@ docker compose up --build
 
 # 3. Access the Live Control Room
 Go to http://localhost:8501 in your browser.
+
+## 📸 System Previews
+![Live Dashboard](dashboard-preview.png)
+![Docker Microservices](docker.png)
+
+## 🧠 Architecture Flow
+1. **Data Generation:** Synthetic transaction streams generated via `Faker`.
+2. **Ingestion:** Producer asynchronously pushes events into **Redis Streams**.
+3. **Processing:** Consumer continuously polls the stream, evaluating swipe-velocity rules.
+4. **Validation:** Users exceeding threshold limits within a 60s TTL are instantly frozen.
+5. **Observability:** Metrics and frozen accounts are broadcasted to a live **Streamlit** dashboard.
+
+## 📂 Repository Structure
+```text
+RealTime_Fraud_Engine/
+├── src/
+│   ├── producer.py       # Simulates transaction payloads
+│   ├── consumer.py       # Fraud detection logic
+│   └── dashboard.py      # Streamlit UI
+├── Dockerfile            # Container definition
+├── docker-compose.yml    # Microservices orchestrator
+├── requirements.txt      # Dependencies
+└── README.md

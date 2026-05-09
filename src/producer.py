@@ -7,7 +7,7 @@ import os
 
 print("Starting the producer...")
 
-r = redis.Redis(os.getenv('REDIS_HOST', 'localhost'), port=6379, decode_responses=True  )
+r = redis.Redis(host='redis', port=6379, decode_responses=True)
 fake = Faker()
 
 merchants = [
