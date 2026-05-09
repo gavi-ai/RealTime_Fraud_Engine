@@ -3,10 +3,11 @@ import redis
 import random
 from faker import Faker
 from datetime import datetime
+import os
 
 print("Starting the producer...")
 
-r = redis.Redis(host='localhost', port=6379, decode_responses=True  )
+r = redis.Redis(os.getenv('REDIS_HOST', 'localhost'), port=6379, decode_responses=True  )
 fake = Faker()
 
 merchants = [
