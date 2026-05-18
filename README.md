@@ -1,54 +1,87 @@
-# 📡 Real-Time Fraud Detection Engine (Stream Processing)
+# Real-Time Fraud Detection Engine
 
-## 📌 Executive Summary
-A high-throughput, real-time data streaming infrastructure engineered to detect anomalies in milliseconds. Designed to handle massive scale (Tier-1 FinTech/GenAI workloads) while aggressively optimizing cloud compute costs (FinOps).
+Stream processing pipeline that detects fraudulent transactions in 
+milliseconds using Redis In-Memory Streams. Fully containerised — 
+clone and run in under 60 seconds with Docker.
 
-## 🏗️ The Architecture
-*(Yahan apna architecture.png upload karke insert kar dena)*
+---
 
-## 🚀 Commercial Value (The ROI)
-* 🌍 **Massive Scale Ingestion:** Utilizes **Redis In-Memory Streams** (`XADD`/`XREAD`) to process continuous, high-velocity telemetry and transaction data with zero-latency.
-* 💰 **FinOps & Resource Efficiency:** Bypasses heavy hard-drive I/O bottlenecks. The entire infrastructure is containerized via **Docker**, ensuring isolated, lean, and predictable compute usage regardless of the deployment environment.
-* 🛡️ **Fault Tolerance:** Built-in decoupled architecture. If the consumer fails, the Redis stream retains the data, ensuring zero data loss and automated recovery.
-* 📊 **Observability:** Integrated with a **Streamlit** live radar for real-time executive dashboarding and anomaly tracking.
+## What this solves
 
-## ⚙️ Tech Stack
-* **Streaming Engine:** Redis (Pub/Sub & Streams)
-* **Processing & Logic:** Python, Pandas
-* **Environment & DevOps:** Docker, Docker Compose
-* **Observability UI:** Streamlit
+Batch fraud detection catches fraud after the fact. This pipeline 
+evaluates every transaction on arrival — no disk I/O, no queue 
+backlog — and freezes accounts the moment they exceed velocity 
+thresholds.
 
-## ⚡ Quick Start (Run it Locally in 60 Seconds)
+---
+
+## How it works
+[Producer]                    [Redis Stream]           [Consumer — "Sniper"]
+Faker generates           →   XADD pushes events   →   XREAD polls continuously
+synthetic transactions        to in-memory stream        evaluates swipe velocity
+                                                     if user exceeds N swipes
+                                                     within 60s TTL window:
+                                                       → account flagged
+                                                       → event pushed to dashboard
+
+                                                [Streamlit Dashboard]
+                                                Live radar: flagged accounts,
+                                                transaction volume, freeze log
+
+Producer and consumer are fully decoupled — if the consumer restarts, 
+the Redis stream retains unconsumed events. No data loss.
+
+---
+
+## Tech stack
+
+| Component | Tool |
+|---|---|
+| Stream transport | Redis Streams (XADD / XREAD) |
+| Fraud logic | Python, in-memory state |
+| Observability UI | Streamlit |
+| Containerisation | Docker, Docker Compose |
+| Data generation | Faker |
+
+---
+
+## Quick start
+
 ```bash
-# 1. Clone the repository
-git clone [https://github.com/](https://github.com/)[Your-Username]/RealTime_Fraud_Engine.git
+git clone https://github.com/gavi-ai/RealTime_Fraud_Engine.git
 cd RealTime_Fraud_Engine
 
-# 2. Fire up the isolated Docker environment
 docker compose up --build
+```
 
-# 3. Access the Live Control Room
-Go to http://localhost:8501 in your browser.
+Then open `http://localhost:8501` for the live dashboard.
 
-## 📸 System Previews
-![Live Dashboard](dashboard-preview.png)
-![Docker Microservices](docker.png)
+That's it. Docker handles Redis, the producer, the consumer, and the 
+dashboard — all in isolated containers.
 
-## 🧠 Architecture Flow
-1. **Data Generation:** Synthetic transaction streams generated via `Faker`.
-2. **Ingestion:** Producer asynchronously pushes events into **Redis Streams**.
-3. **Processing:** Consumer continuously polls the stream, evaluating swipe-velocity rules.
-4. **Validation:** Users exceeding threshold limits within a 60s TTL are instantly frozen.
-5. **Observability:** Metrics and frozen accounts are broadcasted to a live **Streamlit** dashboard.
+---
 
-## 📂 Repository Structure
-```text
+## Repository structure
 RealTime_Fraud_Engine/
 ├── src/
-│   ├── producer.py       # Simulates transaction payloads
-│   ├── consumer.py       # Fraud detection logic
-│   └── dashboard.py      # Streamlit UI
-├── Dockerfile            # Container definition
-├── docker-compose.yml    # Microservices orchestrator
-├── requirements.txt      # Dependencies
-└── README.md
+│   ├── producer.py       # Generates synthetic transaction stream
+│   ├── consumer.py       # Fraud detection logic (velocity rules + TTL)
+│   └── dashboard.py      # Streamlit live radar UI
+├── Dockerfile
+├── docker-compose.yml    # Wires Redis + producer + consumer + dashboard
+├── requirements.txt
+├── architecture.png
+└── dashboard-preview.png
+
+---
+
+## Fraud detection logic
+
+Each transaction is evaluated against a per-user rolling window:
+
+- Window size: 60 seconds (Redis TTL)
+- Threshold: configurable swipe velocity limit
+- On breach: user ID is flagged, added to frozen accounts set, 
+  broadcast to dashboard in real time
+
+No database writes. No disk I/O. Pure in-memory evaluation.
